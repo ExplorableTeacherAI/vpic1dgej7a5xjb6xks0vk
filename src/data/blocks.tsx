@@ -5,6 +5,11 @@ import { type ReactElement } from "react";
 // Initialize variables and their colors from this file's variable definitions
 import { useVariableStore, initializeVariableColors } from "@/stores";
 import { getDefaultValues, variableDefinitions } from "./variables";
+import { trigOrientBlocks } from "./sections/trigOrient";
+import { trigRatioConstantBlocks } from "./sections/trigRatioConstant";
+import { trigNamingSidesBlocks } from "./sections/trigNamingSides";
+import { trigThreeRatiosBlocks } from "./sections/trigThreeRatios";
+import { trigConclusionBlocks } from "./sections/trigConclusion";
 useVariableStore.getState().initialize(getDefaultValues());
 initializeVariableColors(variableDefinitions);
 
@@ -85,5 +90,9 @@ initializeVariableColors(variableDefinitions);
  */
 
 export const blocks: ReactElement[] = [
-    // Start adding your blocks here!
+    ...trigOrientBlocks,
+    ...trigRatioConstantBlocks,
+    ...trigNamingSidesBlocks,
+    ...trigThreeRatiosBlocks,
+    ...trigConclusionBlocks,
 ];

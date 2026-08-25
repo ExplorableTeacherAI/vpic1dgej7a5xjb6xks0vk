@@ -81,84 +81,133 @@ export interface VariableDefinition {
  *    { defaultValue: { x: 5, y: 10 }, type: 'object', schema: '{ x: number, y: number }' }
  */
 export const variableDefinitions: Record<string, VariableDefinition> = {
-    // ========================================
-    // ADD YOUR VARIABLES HERE
-    // ========================================
-
-    // Uncomment and modify these examples for your lesson:
-
-    /*
     // ─────────────────────────────────────────
-    // NUMBER - Use with sliders
+    // SECTION 2 — One Angle, One Ratio (skate ramp)
     // ─────────────────────────────────────────
-    myValue: {
-        defaultValue: 5,
+    rampLength: {
+        defaultValue: 3,
         type: 'number',
-        label: 'My Value',
-        description: 'A number that controls something',
-        unit: 'm',           // optional unit display
-        min: 0,
-        max: 10,
-        step: 0.5,
+        label: 'Ramp length',
+        description: 'Length of the sloping ramp surface, dragged by the student',
+        unit: 'm',
+        min: 2,
+        max: 6,
+        step: 0.1,
+        color: '#62D0AD',
     },
-
-    // ─────────────────────────────────────────
-    // TEXT - Free text input
-    // ─────────────────────────────────────────
-    lessonTitle: {
-        defaultValue: 'My Lesson',
+    rampHighlight: {
+        defaultValue: '',
         type: 'text',
-        label: 'Lesson Title',
-        description: 'The title of your lesson',
-        placeholder: 'Enter a title...',
+        label: 'Ramp highlight',
+        description: 'Which part of the ramp triangle is highlighted: height | slope',
+        color: '#62D0AD',
+        bgColor: 'rgba(98, 208, 173, 0.22)',
     },
-
-    // ─────────────────────────────────────────
-    // SELECT - Dropdown with options
-    // ─────────────────────────────────────────
-    difficulty: {
-        defaultValue: 'medium',
-        type: 'select',
-        label: 'Difficulty',
-        description: 'The difficulty level of the lesson',
-        options: ['easy', 'medium', 'hard', 'expert'],
-    },
-
-    // ─────────────────────────────────────────
-    // BOOLEAN - Toggle switch
-    // ─────────────────────────────────────────
-    showHints: {
-        defaultValue: true,
+    rampExplored: {
+        defaultValue: false,
         type: 'boolean',
-        label: 'Show Hints',
-        description: 'Toggle to show or hide hints',
+        label: 'Ramp explored',
+        description: 'True once the student has dragged the ramp',
+    },
+    answerRampHeight: {
+        defaultValue: '',
+        type: 'text',
+        label: 'Ramp height answer',
+        description: 'Height of an 8 m ramp at the same steepness',
+        placeholder: '???',
+        correctAnswer: ['4', '4m', '4 m'],
+        color: '#62D0AD',
     },
 
     // ─────────────────────────────────────────
-    // ARRAY - List of numbers
+    // SECTION 3 — Which Side Is Which
     // ─────────────────────────────────────────
-    dataPoints: {
-        defaultValue: [1, 4, 9, 16, 25],
-        type: 'array',
-        label: 'Data Points',
-        description: 'Y-values for plotting a graph',
+    markedVertex: {
+        defaultValue: 0,
+        type: 'number',
+        label: 'Marked corner',
+        description: 'Which acute corner is marked: 0 = bottom corner, 1 = top corner',
+        min: 0,
+        max: 1,
+        step: 1,
+        color: '#62D0AD',
+    },
+    sidesHighlight: {
+        defaultValue: '',
+        type: 'text',
+        label: 'Side highlight',
+        description: 'Which named side is highlighted: hypotenuse | opposite | adjacent',
+        color: '#8E90F5',
+        bgColor: 'rgba(142, 144, 245, 0.22)',
+    },
+    answerSideSwap: {
+        defaultValue: '',
+        type: 'select',
+        label: 'Side swap answer',
+        description: 'What the opposite side becomes when the marked corner moves',
+        options: ['hypotenuse', 'opposite', 'adjacent'],
+        correctAnswer: 'adjacent',
+        placeholder: '???',
+        color: '#8E90F5',
     },
 
     // ─────────────────────────────────────────
-    // OBJECT - Complex structured data
+    // SECTION 4 — Three Ratios, Three Names
     // ─────────────────────────────────────────
-    graphSettings: {
-        defaultValue: { 
-            xMin: -10, 
-            xMax: 10, 
-            showGrid: true 
-        },
-        type: 'object',
-        label: 'Graph Settings',
-        description: 'Configuration for the graph display',
-        schema: '{ xMin: number, xMax: number, showGrid: boolean }',
+    triangleAngle: {
+        defaultValue: 30,
+        type: 'number',
+        label: 'Angle',
+        description: 'The marked angle of the right triangle',
+        unit: '°',
+        min: 10,
+        max: 80,
+        step: 1,
+        color: '#62D0AD',
     },
-    */
+    sinePrediction: {
+        defaultValue: 0.5,
+        type: 'number',
+        label: 'Your guess',
+        description: 'Where the student predicts the sine will land',
+        min: 0,
+        max: 1,
+        step: 0.01,
+        color: '#8E90F5',
+    },
+    predictionMoved: {
+        defaultValue: false,
+        type: 'boolean',
+        label: 'Prediction moved',
+        description: 'True once the student has moved the prediction marker',
+    },
+    ratioHighlight: {
+        defaultValue: '',
+        type: 'text',
+        label: 'Ratio highlight',
+        description: 'Which ratio is highlighted: sine | cosine | tangent',
+        color: '#62D0AD',
+        bgColor: 'rgba(98, 208, 173, 0.22)',
+    },
+    answerDoubleAngle: {
+        defaultValue: '',
+        type: 'select',
+        label: 'Doubling answer',
+        description: 'How sin 60 compares with twice sin 30',
+        options: ['equal to', 'less than', 'greater than'],
+        correctAnswer: 'less than',
+        placeholder: '???',
+        color: '#62D0AD',
+    },
+    answerSineFromSides: {
+        defaultValue: '',
+        type: 'text',
+        label: 'Sine from sides answer',
+        description: 'Sine of the angle in a 3-4-5 triangle',
+        placeholder: '???',
+        correctAnswer: ['0.6', '.6', '0.60', '3/5'],
+        color: '#62D0AD',
+    },
 };
 
 /**
