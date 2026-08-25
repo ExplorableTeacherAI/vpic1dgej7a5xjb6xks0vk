@@ -250,17 +250,20 @@ function RatioDrawing() {
                 {formatRatio(sine)}
             </text>
 
-            {/* The student's guess, left of the scale. */}
-            <text
-                x={SCALE_X - 20}
-                y={scaleY(prediction) + 4}
-                fill={PARTNER}
-                fontSize="12"
-                textAnchor="end"
-                style={{ fontVariantNumeric: "tabular-nums" }}
-            >
-                {`your guess ${formatRatio(prediction)}`}
-            </text>
+            {/* The student's guess, left of the scale — name above, value below,
+                so the two-line label never reaches the triangle's side labels. */}
+            <g fill={PARTNER} fontSize="11" textAnchor="end">
+                <text x={SCALE_X - 20} y={scaleY(prediction) - 4}>
+                    your guess (sine)
+                </text>
+                <text
+                    x={SCALE_X - 20}
+                    y={scaleY(prediction) + 12}
+                    style={{ fontVariantNumeric: "tabular-nums" }}
+                >
+                    {formatRatio(prediction)}
+                </text>
+            </g>
             <g transform={`translate(${SCALE_X} ${scaleY(prediction)}) scale(${guessScale})`}>
                 <circle r="10" fill={PARTNER} filter="url(#ratio-handle-shadow)" />
             </g>
@@ -322,7 +325,7 @@ function RatioFigure() {
                 />
                 <FigureSlider
                     varName="sinePrediction"
-                    label="Your guess"
+                    label="Your guess (sine)"
                     {...numberPropsFromDefinition(getVariableInfo("sinePrediction"))}
                     formatValue={formatRatio}
                 />
