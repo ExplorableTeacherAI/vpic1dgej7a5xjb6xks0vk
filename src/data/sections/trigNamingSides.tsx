@@ -5,7 +5,7 @@
  * swap sides while the hypotenuse keeps its name.
  */
 
-import React, { useRef, useState, type ReactElement } from "react";
+import React, { useEffect, useRef, useState, type ReactElement } from "react";
 import { StackLayout } from "@/components/layouts";
 import { Block } from "@/components/templates";
 import {
@@ -14,6 +14,9 @@ import {
     InlineClozeChoice,
     InlineFeedback,
     InlineLinkedHighlight,
+    InlineSpotColor,
+    InlineTooltip,
+    InlineTrigger,
     InteractionHintSequence,
     RevealOnInteraction,
 } from "@/components/atoms";
@@ -24,6 +27,7 @@ import {
     choicePropsFromDefinition,
     getVariableInfo,
     linkedHighlightPropsFromDefinition,
+    spotColorPropsFromDefinition,
 } from "../variables";
 
 // ── View constants ───────────────────────────────────────────────────────────
@@ -35,10 +39,11 @@ const BOTTOM_CORNER: Vec2 = { x: 90, y: 300 }; // acute corner 0
 const RIGHT_CORNER: Vec2 = { x: 390, y: 300 }; // the right angle
 const TOP_CORNER: Vec2 = { x: 390, y: 75 }; // acute corner 1
 
-const INK = "#334155";
 const INK_STRUCTURE = "#64748B";
-const ACCENT = "#62D0AD"; // the marked angle and its opposite side
+const ACCENT = "#62D0AD"; // the opposite side and the drag marker
 const PARTNER = "#8E90F5"; // the adjacent side — the covariation partner
+const HYPOTENUSE = "#F7B23B"; // the hypotenuse — same amber as the ramp surface
+const ANGLE = "#62CCF9"; // the marked angle
 
 const EASE_150 = { transition: "opacity 150ms ease, stroke-width 150ms ease" } as const;
 
@@ -54,6 +59,11 @@ function NamedSidesDrawing() {
     const svgRef = useRef<SVGSVGElement>(null);
 
     const atTop = marked >= 0.5;
+
+    // Reaching the far corner by any route (drag or prose) counts as exploring.
+    useEffect(() => {
+        if (atTop) setVar("sidesExplored", true);
+    }, [atTop, setVar]);
 
     // The marker eases between the two corners — nothing teleports.
     const markerX = useSpring(atTop ? TOP_CORNER.x : BOTTOM_CORNER.x, { stiffness: 200, damping: 22 });
@@ -117,7 +127,7 @@ function NamedSidesDrawing() {
                 />
             </g>
 
-            {/* Hypotenuse — ink, because it answers to the right angle, not to θ. */}
+            {/* Hypotenuse — its own amber; it answers to the right angle, not to θ. */}
             <g {...hoverProps("hypotenuse")} opacity={opacity("hypotenuse")} style={EASE_150}>
                 {isActive("hypotenuse") && (
                     <line
@@ -125,7 +135,7 @@ function NamedSidesDrawing() {
                         y1={BOTTOM_CORNER.y}
                         x2={TOP_CORNER.x}
                         y2={TOP_CORNER.y}
-                        stroke={INK_STRUCTURE}
+                        stroke={HYPOTENUSE}
                         strokeWidth="10"
                         strokeLinecap="round"
                         opacity={0.28}
@@ -136,12 +146,12 @@ function NamedSidesDrawing() {
                     y1={BOTTOM_CORNER.y}
                     x2={TOP_CORNER.x}
                     y2={TOP_CORNER.y}
-                    stroke={INK_STRUCTURE}
-                    strokeWidth={isActive("hypotenuse") ? 4 : 2.5}
+                    stroke={HYPOTENUSE}
+                    strokeWidth={isActive("hypotenuse") ? 5 : 3.5}
                     strokeLinecap="round"
                     style={EASE_150}
                 />
-                <text x={228} y={186} fill={INK} fontSize="13" textAnchor="end">
+                <text x={228} y={186} fill={HYPOTENUSE} fontSize="13" textAnchor="end">
                     hypotenuse
                 </text>
             </g>
@@ -205,8 +215,8 @@ function NamedSidesDrawing() {
             </g>
 
             {/* The marked angle. */}
-            <path d={arcPath} fill="none" stroke={ACCENT} strokeWidth="2.5" />
-            <text x={thetaPoint.x} y={thetaPoint.y} fill={ACCENT} fontSize="14" textAnchor="middle">
+            <path d={arcPath} fill="none" stroke={ANGLE} strokeWidth="2.5" />
+            <text x={thetaPoint.x} y={thetaPoint.y} fill={ANGLE} fontSize="14" textAnchor="middle">
                 θ
             </text>
 
@@ -280,17 +290,38 @@ export const trigNamingSidesBlocks: ReactElement[] = [
     <StackLayout key="layout-trig-sides-setup" maxWidth="xl">
         <Block id="trig-sides-setup" padding="sm">
             <EditableParagraph id="para-trig-sides-setup" blockId="trig-sides-setup">
-                Every right triangle has a longest side, the{" "}
+                Every{" "}
+                <InlineTooltip
+                    id="tooltip-trig-sides-right-triangle"
+                    tooltip="A triangle with one 90° corner, the right angle, marked by a small square."
+                    color="#2563EB"
+                    bgColor="rgba(37, 99, 235, 0.12)"
+                >
+                    right triangle
+                </InlineTooltip>{" "}
+                has a longest side, the{" "}
                 <InlineLinkedHighlight
                     varName="sidesHighlight"
                     highlightId="hypotenuse"
                     {...linkedHighlightPropsFromDefinition(getVariableInfo("sidesHighlight"))}
+                    color="#F7B23B"
+                    bgColor="rgba(247, 178, 59, 0.22)"
                 >
                     hypotenuse
                 </InlineLinkedHighlight>
                 , lying across from the right angle. The other two earn their names from
                 the corner you are standing in. Drag the teal marker along the hypotenuse
-                to the far corner and keep an eye on those two names.
+                to{" "}
+                <InlineTrigger
+                    id="trigger-trig-sides-far-corner"
+                    varName="markedVertex"
+                    value={1}
+                    color="#62CCF9"
+                    bgColor="rgba(98, 204, 249, 0.18)"
+                >
+                    the far corner
+                </InlineTrigger>{" "}
+                and keep an eye on those two names.
             </EditableParagraph>
         </Block>
     </StackLayout>,
@@ -304,10 +335,46 @@ export const trigNamingSidesBlocks: ReactElement[] = [
     <StackLayout key="layout-trig-sides-reflect" maxWidth="xl">
         <Block id="trig-sides-reflect" padding="sm">
             <EditableParagraph id="para-trig-sides-reflect" blockId="trig-sides-reflect">
-                So opposite means across from the marked angle, and adjacent means
-                alongside it. Move the marker and the very same plank of wood becomes the
-                other one. Only the hypotenuse holds its name, because it reports to the
-                right angle instead.
+                So{" "}
+                <InlineLinkedHighlight
+                    id="link-trig-sides-reflect-opposite"
+                    varName="sidesHighlight"
+                    highlightId="opposite"
+                    {...linkedHighlightPropsFromDefinition(getVariableInfo("sidesHighlight"))}
+                    color="#62D0AD"
+                    bgColor="rgba(98, 208, 173, 0.22)"
+                >
+                    opposite
+                </InlineLinkedHighlight>{" "}
+                means across from the{" "}
+                <InlineSpotColor
+                    id="spot-trig-sides-reflect-angle"
+                    varName="markedAngle"
+                    {...spotColorPropsFromDefinition(getVariableInfo("markedAngle"))}
+                >
+                    marked angle
+                </InlineSpotColor>
+                , and{" "}
+                <InlineLinkedHighlight
+                    id="link-trig-sides-reflect-adjacent"
+                    varName="sidesHighlight"
+                    highlightId="adjacent"
+                    {...linkedHighlightPropsFromDefinition(getVariableInfo("sidesHighlight"))}
+                    color="#8E90F5"
+                    bgColor="rgba(142, 144, 245, 0.22)"
+                >
+                    adjacent
+                </InlineLinkedHighlight>{" "}
+                means alongside it. Move the marker and the very same plank of wood becomes
+                the other one. Only the{" "}
+                <InlineSpotColor
+                    id="spot-trig-sides-reflect-hypotenuse"
+                    varName="sideHypotenuse"
+                    {...spotColorPropsFromDefinition(getVariableInfo("sideHypotenuse"))}
+                >
+                    hypotenuse
+                </InlineSpotColor>{" "}
+                holds its name, because it reports to the right angle instead.
             </EditableParagraph>
         </Block>
     </StackLayout>,
@@ -316,8 +383,15 @@ export const trigNamingSidesBlocks: ReactElement[] = [
         <Block id="trig-sides-question" padding="sm">
             <EditableParagraph id="para-trig-sides-question" blockId="trig-sides-question">
                 <RevealOnInteraction varName="sidesExplored">
-                    The tall vertical side is the opposite when the bottom corner is
-                    marked. Mark the top corner instead and that same side becomes the{" "}
+                    The tall vertical side is the{" "}
+                    <InlineSpotColor
+                        id="spot-trig-sides-question-opposite"
+                        varName="sideOpposite"
+                        {...spotColorPropsFromDefinition(getVariableInfo("sideOpposite"))}
+                    >
+                        opposite
+                    </InlineSpotColor>{" "}
+                    when the bottom corner is marked. Mark the top corner instead and that same side becomes the{" "}
                     <InlineFeedback
                         varName="answerSideSwap"
                         correctValue="adjacent"

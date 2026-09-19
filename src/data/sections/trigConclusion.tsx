@@ -7,7 +7,8 @@
 import { type ReactElement } from "react";
 import { StackLayout } from "@/components/layouts";
 import { Block } from "@/components/templates";
-import { EditableH2, EditableParagraph } from "@/components/atoms";
+import { EditableH2, EditableParagraph, InlineSpotColor } from "@/components/atoms";
+import { getVariableInfo, spotColorPropsFromDefinition } from "../variables";
 
 export const trigConclusionBlocks: ReactElement[] = [
     <StackLayout key="layout-trig-close-heading" maxWidth="xl">
@@ -32,10 +33,56 @@ export const trigConclusionBlocks: ReactElement[] = [
         <Block id="trig-close-idea" padding="sm">
             <EditableParagraph id="para-trig-close-idea" blockId="trig-close-idea">
                 That is the whole of sine, cosine and tangent. Stand in a corner, name the
-                three sides from where you are, then divide the pair you need: opposite
-                over hypotenuse, adjacent over hypotenuse, opposite over adjacent. Three
-                divisions, three names, one decimal that belongs to the angle and to
-                nothing else.
+                three sides from where you are, then divide the pair you need:{" "}
+                <InlineSpotColor
+                    id="spot-trig-close-sine-opposite"
+                    varName="sideOpposite"
+                    {...spotColorPropsFromDefinition(getVariableInfo("sideOpposite"))}
+                >
+                    opposite
+                </InlineSpotColor>{" "}
+                over{" "}
+                <InlineSpotColor
+                    id="spot-trig-close-sine-hypotenuse"
+                    varName="sideHypotenuse"
+                    {...spotColorPropsFromDefinition(getVariableInfo("sideHypotenuse"))}
+                >
+                    hypotenuse
+                </InlineSpotColor>
+                ,{" "}
+                <InlineSpotColor
+                    id="spot-trig-close-cosine-adjacent"
+                    varName="sideAdjacent"
+                    {...spotColorPropsFromDefinition(getVariableInfo("sideAdjacent"))}
+                >
+                    adjacent
+                </InlineSpotColor>{" "}
+                over{" "}
+                <InlineSpotColor
+                    id="spot-trig-close-cosine-hypotenuse"
+                    varName="sideHypotenuse"
+                    {...spotColorPropsFromDefinition(getVariableInfo("sideHypotenuse"))}
+                >
+                    hypotenuse
+                </InlineSpotColor>
+                ,{" "}
+                <InlineSpotColor
+                    id="spot-trig-close-tangent-opposite"
+                    varName="sideOpposite"
+                    {...spotColorPropsFromDefinition(getVariableInfo("sideOpposite"))}
+                >
+                    opposite
+                </InlineSpotColor>{" "}
+                over{" "}
+                <InlineSpotColor
+                    id="spot-trig-close-tangent-adjacent"
+                    varName="sideAdjacent"
+                    {...spotColorPropsFromDefinition(getVariableInfo("sideAdjacent"))}
+                >
+                    adjacent
+                </InlineSpotColor>
+                . Three divisions, three names, one decimal that belongs to the angle and
+                to nothing else.
             </EditableParagraph>
         </Block>
     </StackLayout>,

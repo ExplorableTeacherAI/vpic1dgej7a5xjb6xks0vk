@@ -1,6 +1,6 @@
 /**
  * Section 4 — Three Ratios, Three Names
- * Prediction-first. The student parks an indigo guess on a 0-to-1 sine scale,
+ * Prediction-first. The student parks a pink guess on a 0-to-1 sine scale,
  * then drags the triangle's corner round to 60° and sees the real value land.
  * The scale shares the hypotenuse's pixel length, so the dashed guide makes
  * "sine = opposite over hypotenuse" literally visible.
@@ -15,10 +15,13 @@ import {
     InlineClozeChoice,
     InlineClozeInput,
     InlineFeedback,
+    InlineFormula,
     InlineLinkedHighlight,
+    InlineSpotColor,
+    InlineTrigger,
     InteractionHintSequence,
 } from "@/components/atoms";
-import { Figure, FigureSlider } from "@/components/molecules";
+import { Figure, FigureSlider, FormulaBlock } from "@/components/molecules";
 import { useVar, useSetVar } from "@/stores";
 import { clamp, useSpring, type Vec2 } from "@/lib/motion";
 import {
@@ -27,6 +30,8 @@ import {
     getVariableInfo,
     linkedHighlightPropsFromDefinition,
     numberPropsFromDefinition,
+    scrubVarsFromDefinitions,
+    spotColorPropsFromDefinition,
 } from "../variables";
 
 // ── View constants ───────────────────────────────────────────────────────────
@@ -41,8 +46,11 @@ const SCALE_X = 520;
 const INK = "#334155";
 const INK_STRUCTURE = "#64748B";
 const INK_QUIET = "#CBD5E1";
-const ACCENT = "#62D0AD"; // the triangle and the true sine
-const PARTNER = "#8E90F5"; // the student's prediction
+const ACCENT = "#62D0AD"; // the opposite side, the true sine, and the drag corner
+const ADJACENT = "#8E90F5"; // the adjacent side — same indigo as the naming figure
+const HYPOTENUSE = "#F7B23B"; // the hypotenuse — same amber as the ramp surface
+const ANGLE = "#62CCF9"; // the marked angle
+const GUESS = "#F8A0CD"; // the student's prediction
 
 const EASE_150 = { transition: "opacity 150ms ease, stroke-width 150ms ease" } as const;
 
@@ -121,22 +129,22 @@ function RatioDrawing() {
                 </filter>
             </defs>
 
-            {/* Base and right-angle square. */}
+            {/* Base — the adjacent side, indigo. */}
             <g opacity={dim(["cosine", "tangent"])} style={EASE_150} {...hoverProps("cosine")}>
                 {isActive(["cosine"]) && (
-                    <line x1={VERTEX.x} y1={BASE_Y} x2={foot.x} y2={BASE_Y} stroke={INK_STRUCTURE} strokeWidth="10" strokeLinecap="round" opacity={0.28} />
+                    <line x1={VERTEX.x} y1={BASE_Y} x2={foot.x} y2={BASE_Y} stroke={ADJACENT} strokeWidth="10" strokeLinecap="round" opacity={0.28} />
                 )}
                 <line
                     x1={VERTEX.x}
                     y1={BASE_Y}
                     x2={foot.x}
                     y2={BASE_Y}
-                    stroke={INK_STRUCTURE}
-                    strokeWidth={isActive(["cosine", "tangent"]) ? 4 : 2.5}
+                    stroke={ADJACENT}
+                    strokeWidth={isActive(["cosine", "tangent"]) ? 5 : 3.5}
                     strokeLinecap="round"
                     style={EASE_150}
                 />
-                <text x={(VERTEX.x + foot.x) / 2} y={BASE_Y + 24} fill={INK} fontSize="12" textAnchor="middle">
+                <text x={(VERTEX.x + foot.x) / 2} y={BASE_Y + 24} fill={ADJACENT} fontSize="12" textAnchor="middle">
                     adjacent
                 </text>
             </g>
@@ -148,18 +156,18 @@ function RatioDrawing() {
                 strokeWidth="1.5"
             />
 
-            {/* Hypotenuse. */}
+            {/* Hypotenuse — amber. */}
             <g opacity={dim(["sine", "cosine"])} style={EASE_150} {...hoverProps("sine")}>
                 {isActive(["sine"]) && (
-                    <line x1={VERTEX.x} y1={BASE_Y} x2={apex.x} y2={apex.y} stroke={INK_STRUCTURE} strokeWidth="10" strokeLinecap="round" opacity={0.28} />
+                    <line x1={VERTEX.x} y1={BASE_Y} x2={apex.x} y2={apex.y} stroke={HYPOTENUSE} strokeWidth="10" strokeLinecap="round" opacity={0.28} />
                 )}
                 <line
                     x1={VERTEX.x}
                     y1={BASE_Y}
                     x2={apex.x}
                     y2={apex.y}
-                    stroke={INK_STRUCTURE}
-                    strokeWidth={isActive(["sine", "cosine"]) ? 4 : 2.5}
+                    stroke={HYPOTENUSE}
+                    strokeWidth={isActive(["sine", "cosine"]) ? 5 : 3.5}
                     strokeLinecap="round"
                     style={EASE_150}
                 />
@@ -189,10 +197,10 @@ function RatioDrawing() {
             <path
                 d={`M ${VERTEX.x + 40} ${BASE_Y} A 40 40 0 0 0 ${VERTEX.x + 40 * cosine} ${BASE_Y - 40 * sine}`}
                 fill="none"
-                stroke={ACCENT}
+                stroke={ANGLE}
                 strokeWidth="2.5"
             />
-            <text x={VERTEX.x + 52} y={BASE_Y - 14} fill={ACCENT} fontSize="13" style={{ fontVariantNumeric: "tabular-nums" }}>
+            <text x={VERTEX.x + 52} y={BASE_Y - 14} fill={ANGLE} fontSize="13" style={{ fontVariantNumeric: "tabular-nums" }}>
                 {formatAngle(angle)}
             </text>
 
@@ -252,7 +260,7 @@ function RatioDrawing() {
 
             {/* The student's guess, left of the scale — name above, value below,
                 so the two-line label never reaches the triangle's side labels. */}
-            <g fill={PARTNER} fontSize="11" textAnchor="end">
+            <g fill={GUESS} fontSize="11" textAnchor="end">
                 <text x={SCALE_X - 20} y={scaleY(prediction) - 4}>
                     your guess (sine)
                 </text>
@@ -265,7 +273,7 @@ function RatioDrawing() {
                 </text>
             </g>
             <g transform={`translate(${SCALE_X} ${scaleY(prediction)}) scale(${guessScale})`}>
-                <circle r="10" fill={PARTNER} filter="url(#ratio-handle-shadow)" />
+                <circle r="10" fill={GUESS} filter="url(#ratio-handle-shadow)" />
             </g>
             <circle
                 cx={SCALE_X}
@@ -313,7 +321,7 @@ function RatioFigure() {
                 setVar("predictionMoved", false);
                 setVar("ratioHighlight", "");
             }}
-            caption="Park your indigo guess on the scale first, then drag the teal corner round to 60°. The dashed line carries the triangle's height straight onto the scale."
+            caption="Park your pink guess on the scale first, then drag the teal corner round to 60°. The dashed line carries the triangle's height straight onto the scale."
         >
             <RatioDrawing />
             <div className="space-y-3 px-6 pb-5">
@@ -336,7 +344,7 @@ function RatioFigure() {
                 steps={[
                     {
                         gesture: "drag-vertical",
-                        label: "Drag the indigo marker to where sine will land at 60°",
+                        label: "Drag the pink marker to where sine will land at 60°",
                         position: { x: "81%", y: "44%" },
                         dragPath: { type: "line", startOffset: { x: 0, y: 20 }, endOffset: { x: 0, y: -20 } },
                     },
@@ -349,6 +357,24 @@ function RatioFigure() {
                 ]}
             />
         </Figure>
+    );
+}
+
+// The three definitions with the figure's own colours. The angle is the same
+// draggable number that drives the triangle; the decimals follow it live.
+function RatioFormula() {
+    const angle = useVar<number>("triangleAngle", 30);
+    const radians = toRadians(angle);
+    const opposite = "\\text{\\clr{sideOpposite}{opposite}}";
+    const adjacent = "\\text{\\clr{sideAdjacent}{adjacent}}";
+    const hypotenuse = "\\text{\\clr{sideHypotenuse}{hypotenuse}}";
+
+    return (
+        <FormulaBlock
+            latex={`\\begin{aligned} \\sin \\scrub{triangleAngle}^\\circ &= \\dfrac{${opposite}}{${hypotenuse}} = \\clr{sideOpposite}{${formatRatio(Math.sin(radians))}} \\\\[10pt] \\cos \\val{triangleAngle}^\\circ &= \\dfrac{${adjacent}}{${hypotenuse}} = ${formatRatio(Math.cos(radians))} \\\\[10pt] \\tan \\val{triangleAngle}^\\circ &= \\dfrac{${opposite}}{${adjacent}} = ${formatRatio(Math.tan(radians))} \\end{aligned}`}
+            colorMap={{ sideOpposite: "#62D0AD", sideAdjacent: "#8E90F5", sideHypotenuse: "#F7B23B" }}
+            variables={scrubVarsFromDefinitions(["triangleAngle"])}
+        />
     );
 }
 
@@ -366,10 +392,34 @@ export const trigThreeRatiosBlocks: ReactElement[] = [
     <StackLayout key="layout-trig-ratios-setup" maxWidth="xl">
         <Block id="trig-ratios-setup" padding="sm">
             <EditableParagraph id="para-trig-ratios-setup" blockId="trig-ratios-setup">
-                At 30° the sine of this triangle reads 0.50. Before touching the angle,
-                park the indigo marker on the scale where you think the sine will land
-                once the angle doubles to 60°. Then drag the teal corner round until the
-                angle gets there.
+                <InlineTrigger
+                    id="trigger-trig-ratios-angle-thirty"
+                    varName="triangleAngle"
+                    value={30}
+                    color="#62CCF9"
+                    bgColor="rgba(98, 204, 249, 0.18)"
+                    icon="refresh"
+                >
+                    At 30°
+                </InlineTrigger>{" "}
+                the sine of this triangle reads 0.50. Before touching the angle, park
+                the{" "}
+                <InlineSpotColor
+                    id="spot-trig-ratios-setup-guess"
+                    varName="sinePrediction"
+                    {...spotColorPropsFromDefinition(getVariableInfo("sinePrediction"))}
+                >
+                    pink marker
+                </InlineSpotColor>{" "}
+                on the scale where you think the sine will land once the angle doubles to{" "}
+                <InlineSpotColor
+                    id="spot-trig-ratios-setup-angle-sixty"
+                    varName="markedAngle"
+                    {...spotColorPropsFromDefinition(getVariableInfo("markedAngle"))}
+                >
+                    60°
+                </InlineSpotColor>
+                . Then drag the teal corner round until the angle gets there.
             </EditableParagraph>
         </Block>
     </StackLayout>,
@@ -392,8 +442,23 @@ export const trigThreeRatiosBlocks: ReactElement[] = [
                 >
                     sine
                 </InlineLinkedHighlight>{" "}
-                is no multiplier sitting in front of the angle; it is opposite divided by
-                hypotenuse.{" "}
+                is no multiplier sitting in front of the angle; it is{" "}
+                <InlineSpotColor
+                    id="spot-trig-ratios-sine-opposite"
+                    varName="sideOpposite"
+                    {...spotColorPropsFromDefinition(getVariableInfo("sideOpposite"))}
+                >
+                    opposite
+                </InlineSpotColor>{" "}
+                divided by{" "}
+                <InlineSpotColor
+                    id="spot-trig-ratios-sine-hypotenuse"
+                    varName="sideHypotenuse"
+                    {...spotColorPropsFromDefinition(getVariableInfo("sideHypotenuse"))}
+                >
+                    hypotenuse
+                </InlineSpotColor>
+                .{" "}
                 <InlineLinkedHighlight
                     varName="ratioHighlight"
                     highlightId="cosine"
@@ -401,7 +466,23 @@ export const trigThreeRatiosBlocks: ReactElement[] = [
                 >
                     Cosine
                 </InlineLinkedHighlight>{" "}
-                takes adjacent over hypotenuse, and{" "}
+                takes{" "}
+                <InlineSpotColor
+                    id="spot-trig-ratios-cosine-adjacent"
+                    varName="sideAdjacent"
+                    {...spotColorPropsFromDefinition(getVariableInfo("sideAdjacent"))}
+                >
+                    adjacent
+                </InlineSpotColor>{" "}
+                over{" "}
+                <InlineSpotColor
+                    id="spot-trig-ratios-cosine-hypotenuse"
+                    varName="sideHypotenuse"
+                    {...spotColorPropsFromDefinition(getVariableInfo("sideHypotenuse"))}
+                >
+                    hypotenuse
+                </InlineSpotColor>
+                , and{" "}
                 <InlineLinkedHighlight
                     varName="ratioHighlight"
                     highlightId="tangent"
@@ -409,15 +490,49 @@ export const trigThreeRatiosBlocks: ReactElement[] = [
                 >
                     tangent
                 </InlineLinkedHighlight>{" "}
-                takes opposite over adjacent.
+                takes{" "}
+                <InlineSpotColor
+                    id="spot-trig-ratios-tangent-opposite"
+                    varName="sideOpposite"
+                    {...spotColorPropsFromDefinition(getVariableInfo("sideOpposite"))}
+                >
+                    opposite
+                </InlineSpotColor>{" "}
+                over{" "}
+                <InlineSpotColor
+                    id="spot-trig-ratios-tangent-adjacent"
+                    varName="sideAdjacent"
+                    {...spotColorPropsFromDefinition(getVariableInfo("sideAdjacent"))}
+                >
+                    adjacent
+                </InlineSpotColor>
+                .
             </EditableParagraph>
+        </Block>
+    </StackLayout>,
+
+    <StackLayout key="layout-trig-ratios-formula" maxWidth="xl">
+        <Block id="trig-ratios-formula" padding="md">
+            <RatioFormula />
         </Block>
     </StackLayout>,
 
     <StackLayout key="layout-trig-ratios-question-doubling" maxWidth="xl">
         <Block id="trig-ratios-question-doubling" padding="sm">
             <EditableParagraph id="para-trig-ratios-question-doubling" blockId="trig-ratios-question-doubling">
-                Set beside twice the value of sin 30°, the value of sin 60° is{" "}
+                Set beside twice the value of{" "}
+                <InlineFormula
+                    id="formula-trig-ratios-sine-thirty"
+                    latex="\sin \clr{markedAngle}{30^\circ}"
+                    colorMap={{ markedAngle: "#62CCF9" }}
+                />
+                , the value of{" "}
+                <InlineFormula
+                    id="formula-trig-ratios-sine-sixty"
+                    latex="\sin \clr{markedAngle}{60^\circ}"
+                    colorMap={{ markedAngle: "#62CCF9" }}
+                />{" "}
+                is{" "}
                 <InlineFeedback
                     varName="answerDoubleAngle"
                     correctValue="less than"
@@ -457,8 +572,39 @@ export const trigThreeRatiosBlocks: ReactElement[] = [
     <StackLayout key="layout-trig-ratios-question-sides" maxWidth="xl">
         <Block id="trig-ratios-question-sides" padding="sm">
             <EditableParagraph id="para-trig-ratios-question-sides" blockId="trig-ratios-question-sides">
-                A roof brace makes a right triangle. The side opposite the marked angle is
-                3 m and the hypotenuse is 5 m, so the sine of that angle is{" "}
+                A roof brace makes a right triangle. The side{" "}
+                <InlineSpotColor
+                    id="spot-trig-ratios-brace-opposite"
+                    varName="sideOpposite"
+                    {...spotColorPropsFromDefinition(getVariableInfo("sideOpposite"))}
+                >
+                    opposite
+                </InlineSpotColor>{" "}
+                the marked angle is{" "}
+                <InlineSpotColor
+                    id="spot-trig-ratios-brace-opposite-length"
+                    varName="sideOpposite"
+                    {...spotColorPropsFromDefinition(getVariableInfo("sideOpposite"))}
+                >
+                    3 m
+                </InlineSpotColor>{" "}
+                and the{" "}
+                <InlineSpotColor
+                    id="spot-trig-ratios-brace-hypotenuse"
+                    varName="sideHypotenuse"
+                    {...spotColorPropsFromDefinition(getVariableInfo("sideHypotenuse"))}
+                >
+                    hypotenuse
+                </InlineSpotColor>{" "}
+                is{" "}
+                <InlineSpotColor
+                    id="spot-trig-ratios-brace-hypotenuse-length"
+                    varName="sideHypotenuse"
+                    {...spotColorPropsFromDefinition(getVariableInfo("sideHypotenuse"))}
+                >
+                    5 m
+                </InlineSpotColor>
+                , so the sine of that angle is{" "}
                 <InlineFeedback
                     varName="answerSineFromSides"
                     correctValue={["0.6", ".6", "0.60", "3/5"]}

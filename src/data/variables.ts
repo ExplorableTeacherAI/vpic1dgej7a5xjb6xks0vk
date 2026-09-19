@@ -82,6 +82,39 @@ export interface VariableDefinition {
  */
 export const variableDefinitions: Record<string, VariableDefinition> = {
     // ─────────────────────────────────────────
+    // LESSON-WIDE COLOURS — one hue per quantity, shared by every figure,
+    // formula and coloured word (opposite/height, adjacent, hypotenuse/ramp, angle)
+    // ─────────────────────────────────────────
+    sideOpposite: {
+        defaultValue: 'opposite',
+        type: 'spotColor',
+        label: 'Opposite side',
+        description: 'Colour of the opposite side (the ramp height) in every figure and formula',
+        color: '#62D0AD',
+    },
+    sideAdjacent: {
+        defaultValue: 'adjacent',
+        type: 'spotColor',
+        label: 'Adjacent side',
+        description: 'Colour of the adjacent side in every figure and formula',
+        color: '#8E90F5',
+    },
+    sideHypotenuse: {
+        defaultValue: 'hypotenuse',
+        type: 'spotColor',
+        label: 'Hypotenuse',
+        description: 'Colour of the hypotenuse (the sloping ramp surface) in every figure and formula',
+        color: '#F7B23B',
+    },
+    markedAngle: {
+        defaultValue: 'angle',
+        type: 'spotColor',
+        label: 'Marked angle',
+        description: 'Colour of the marked angle in every figure and formula',
+        color: '#62CCF9',
+    },
+
+    // ─────────────────────────────────────────
     // SECTION 2 — One Angle, One Ratio (skate ramp)
     // ─────────────────────────────────────────
     rampLength: {
@@ -93,7 +126,7 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         min: 2,
         max: 6,
         step: 0.1,
-        color: '#62D0AD',
+        color: '#F7B23B',
     },
     rampHighlight: {
         defaultValue: '',
@@ -163,7 +196,7 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         min: 10,
         max: 80,
         step: 1,
-        color: '#62D0AD',
+        color: '#62CCF9',
     },
     sinePrediction: {
         defaultValue: 0.5,
@@ -173,7 +206,7 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         min: 0,
         max: 1,
         step: 0.01,
-        color: '#8E90F5',
+        color: '#F8A0CD',
     },
     predictionMoved: {
         defaultValue: false,

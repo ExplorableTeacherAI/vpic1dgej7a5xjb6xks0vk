@@ -5,7 +5,7 @@
  * before-state reference. Height and length both change; their ratio does not.
  */
 
-import React, { useRef, useState, type ReactElement } from "react";
+import React, { useEffect, useRef, useState, type ReactElement } from "react";
 import { StackLayout } from "@/components/layouts";
 import { Block } from "@/components/templates";
 import {
@@ -13,8 +13,11 @@ import {
     EditableParagraph,
     InlineClozeInput,
     InlineFeedback,
+    InlineFormula,
     InlineLinkedHighlight,
     InlineScrubbleNumber,
+    InlineSpotColor,
+    InlineTrigger,
     InteractionHintSequence,
     RevealOnInteraction,
 } from "@/components/atoms";
@@ -26,6 +29,7 @@ import {
     getVariableInfo,
     linkedHighlightPropsFromDefinition,
     numberPropsFromDefinition,
+    spotColorPropsFromDefinition,
 } from "../variables";
 
 // ── Domain model ─────────────────────────────────────────────────────────────
@@ -49,7 +53,9 @@ const PIXELS_PER_METER = 66;
 const INK = "#334155";
 const INK_STRUCTURE = "#64748B";
 const INK_QUIET = "#CBD5E1";
-const ACCENT = "#62D0AD";
+const ACCENT = "#62D0AD"; // the height (the opposite side) and the drag handle
+const HYPOTENUSE = "#F7B23B"; // the sloping surface — the ramp length
+const ANGLE = "#62CCF9"; // the locked 30° angle
 
 const EASE_150 = { transition: "opacity 150ms ease, stroke-width 150ms ease" } as const;
 
@@ -83,6 +89,11 @@ function RampDrawing() {
         onPointerEnter: () => setVar("rampHighlight", id),
         onPointerLeave: () => setVar("rampHighlight", ""),
     });
+
+    // Stretching the ramp by any route (corner, slider, prose) counts as exploring.
+    useEffect(() => {
+        if (Math.abs(length - DEFAULT_LENGTH) > 0.05) setVar("rampExplored", true);
+    }, [length, setVar]);
 
     const corner = cornerFor(length);
     const ghost = cornerFor(DEFAULT_LENGTH);
@@ -122,11 +133,14 @@ function RampDrawing() {
                 <text x="40" y="42" fill={ACCENT} opacity={opacity("height")} style={EASE_150}>
                     {`height        ${formatMetres(height)}`}
                 </text>
-                <text x="40" y="64" fill={ACCENT} opacity={opacity("slope")} style={EASE_150}>
+                <text x="40" y="64" fill={HYPOTENUSE} opacity={opacity("slope")} style={EASE_150}>
                     {`ramp          ${formatMetres(length)}`}
                 </text>
                 <text x="40" y="90" fill={INK} fontWeight="600">
-                    {`height ÷ ramp = ${formatRatio(ratio)}`}
+                    <tspan fill={ACCENT}>height</tspan>
+                    {" ÷ "}
+                    <tspan fill={HYPOTENUSE}>ramp</tspan>
+                    {` = ${formatRatio(ratio)}`}
                 </text>
             </g>
 
@@ -173,10 +187,10 @@ function RampDrawing() {
                 <path
                     d={`M ${ORIGIN.x + 46} ${GROUND_Y} A 46 46 0 0 0 ${ORIGIN.x + 46 * COS_SLOPE} ${GROUND_Y - 46 * SIN_SLOPE}`}
                     fill="none"
-                    stroke={INK_STRUCTURE}
-                    strokeWidth="1.5"
+                    stroke={ANGLE}
+                    strokeWidth="2.5"
                 />
-                <text x={ORIGIN.x + 56} y={GROUND_Y - 14} fill={INK} fontSize="12">
+                <text x={ORIGIN.x + 56} y={GROUND_Y - 14} fill={ANGLE} fontSize="12">
                     30°
                 </text>
                 <text
@@ -226,7 +240,7 @@ function RampDrawing() {
                 </text>
             </g>
 
-            {/* Sloping surface — accent, the side the student drags. */}
+            {/* Sloping surface — amber, the side the student drags. */}
             <g {...hoverProps("slope")} opacity={opacity("slope")} style={{ ...EASE_150, cursor: "default" }}>
                 {isActive("slope") && (
                     <line
@@ -234,7 +248,7 @@ function RampDrawing() {
                         y1={GROUND_Y}
                         x2={corner.x}
                         y2={corner.y}
-                        stroke={ACCENT}
+                        stroke={HYPOTENUSE}
                         strokeWidth="10"
                         strokeLinecap="round"
                         opacity={0.28}
@@ -245,7 +259,7 @@ function RampDrawing() {
                     y1={GROUND_Y}
                     x2={corner.x}
                     y2={corner.y}
-                    stroke={ACCENT}
+                    stroke={HYPOTENUSE}
                     strokeWidth={isActive("slope") ? 5 : 3.5}
                     strokeLinecap="round"
                     style={EASE_150}
@@ -253,7 +267,7 @@ function RampDrawing() {
                 <text
                     x={(ORIGIN.x + corner.x) / 2 - 10}
                     y={(GROUND_Y + corner.y) / 2 - 10}
-                    fill={ACCENT}
+                    fill={HYPOTENUSE}
                     fontSize="12"
                     textAnchor="end"
                     style={{ fontVariantNumeric: "tabular-nums" }}
@@ -340,12 +354,21 @@ export const trigRatioConstantBlocks: ReactElement[] = [
     <StackLayout key="layout-trig-ratio-setup" maxWidth="xl">
         <Block id="trig-ratio-setup" padding="sm">
             <EditableParagraph id="para-trig-ratio-setup" blockId="trig-ratio-setup">
-                Here is a skate ramp whose steepness is locked at 30°. Drag the teal
-                corner at the top to stretch the{" "}
+                Here is a skate ramp whose steepness is locked at{" "}
+                <InlineSpotColor
+                    id="spot-trig-ratio-setup-angle"
+                    varName="markedAngle"
+                    {...spotColorPropsFromDefinition(getVariableInfo("markedAngle"))}
+                >
+                    30°
+                </InlineSpotColor>
+                . Drag the teal corner at the top to stretch the{" "}
                 <InlineLinkedHighlight
                     varName="rampHighlight"
                     highlightId="slope"
                     {...linkedHighlightPropsFromDefinition(getVariableInfo("rampHighlight"))}
+                    color="#F7B23B"
+                    bgColor="rgba(247, 178, 59, 0.22)"
                 >
                     sloping surface
                 </InlineLinkedHighlight>{" "}
@@ -377,9 +400,32 @@ export const trigRatioConstantBlocks: ReactElement[] = [
     <StackLayout key="layout-trig-ratio-reflect" maxWidth="xl">
         <Block id="trig-ratio-reflect" padding="sm">
             <EditableParagraph id="para-trig-ratio-reflect" blockId="trig-ratio-reflect">
-                Longer ramp, taller ramp, same 0.50. The two lengths keep changing, but
-                their ratio is pinned to the angle, which means that one decimal is really
-                a name for the steepness. Every 30° slope on earth shares it.
+                <InlineTrigger
+                    id="trigger-trig-ratio-longer-ramp"
+                    varName="rampLength"
+                    value={6}
+                    color="#F7B23B"
+                    bgColor="rgba(247, 178, 59, 0.18)"
+                    icon="zap"
+                >
+                    Longer ramp
+                </InlineTrigger>
+                , taller ramp, same{" "}
+                <InlineFormula
+                    id="formula-trig-ratio-height-over-ramp"
+                    latex="\text{\clr{sideOpposite}{height}} \div \text{\clr{sideHypotenuse}{ramp}} = 0.50"
+                    colorMap={{ sideOpposite: "#62D0AD", sideHypotenuse: "#F7B23B" }}
+                />
+                . The two lengths keep changing, but their ratio is pinned to the angle,
+                which means that one decimal is really a name for the steepness. Every{" "}
+                <InlineSpotColor
+                    id="spot-trig-ratio-reflect-angle"
+                    varName="markedAngle"
+                    {...spotColorPropsFromDefinition(getVariableInfo("markedAngle"))}
+                >
+                    30°
+                </InlineSpotColor>{" "}
+                slope on earth shares it.
             </EditableParagraph>
         </Block>
     </StackLayout>,
@@ -388,8 +434,31 @@ export const trigRatioConstantBlocks: ReactElement[] = [
         <Block id="trig-ratio-question" padding="sm">
             <EditableParagraph id="para-trig-ratio-question" blockId="trig-ratio-question">
                 <RevealOnInteraction varName="rampExplored">
-                    A ramp at the skatepark next door has the same 30° slope and is 8 m
-                    long. Measured in metres, its height is{" "}
+                    A ramp at the skatepark next door has the same{" "}
+                    <InlineSpotColor
+                        id="spot-trig-ratio-question-angle"
+                        varName="markedAngle"
+                        {...spotColorPropsFromDefinition(getVariableInfo("markedAngle"))}
+                    >
+                        30°
+                    </InlineSpotColor>{" "}
+                    slope and is{" "}
+                    <InlineSpotColor
+                        id="spot-trig-ratio-question-ramp-length"
+                        varName="sideHypotenuse"
+                        {...spotColorPropsFromDefinition(getVariableInfo("sideHypotenuse"))}
+                    >
+                        8 m
+                    </InlineSpotColor>{" "}
+                    long. Measured in metres, its{" "}
+                    <InlineSpotColor
+                        id="spot-trig-ratio-question-height"
+                        varName="sideOpposite"
+                        {...spotColorPropsFromDefinition(getVariableInfo("sideOpposite"))}
+                    >
+                        height
+                    </InlineSpotColor>{" "}
+                    is{" "}
                     <InlineFeedback
                         varName="answerRampHeight"
                         correctValue={["4", "4m", "4 m"]}

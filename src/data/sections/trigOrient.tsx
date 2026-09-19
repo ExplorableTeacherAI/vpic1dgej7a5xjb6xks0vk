@@ -7,7 +7,13 @@
 import { type ReactElement } from "react";
 import { StackLayout } from "@/components/layouts";
 import { Block } from "@/components/templates";
-import { EditableH1, EditableParagraph } from "@/components/atoms";
+import {
+    EditableH1,
+    EditableParagraph,
+    InlineSpotColor,
+    InlineTooltip,
+} from "@/components/atoms";
+import { getVariableInfo, spotColorPropsFromDefinition } from "../variables";
 
 export const trigOrientBlocks: ReactElement[] = [
     <StackLayout key="layout-trig-orient-title" maxWidth="xl">
@@ -31,7 +37,23 @@ export const trigOrientBlocks: ReactElement[] = [
     <StackLayout key="layout-trig-orient-promise" maxWidth="xl">
         <Block id="trig-orient-promise" padding="sm">
             <EditableParagraph id="para-trig-orient-promise" blockId="trig-orient-promise">
-                Every ramp has a height and a sloping surface you ride up. Divide one
+                Every ramp has a{" "}
+                <InlineSpotColor
+                    id="spot-trig-orient-height"
+                    varName="sideOpposite"
+                    {...spotColorPropsFromDefinition(getVariableInfo("sideOpposite"))}
+                >
+                    height
+                </InlineSpotColor>{" "}
+                and a{" "}
+                <InlineSpotColor
+                    id="spot-trig-orient-sloping-surface"
+                    varName="sideHypotenuse"
+                    {...spotColorPropsFromDefinition(getVariableInfo("sideHypotenuse"))}
+                >
+                    sloping surface
+                </InlineSpotColor>{" "}
+                you ride up. Divide one
                 length by the other and you get a single decimal that pins down the
                 steepness exactly, whatever the size of the ramp. That decimal has a name
                 you have seen on a calculator: sine, along with its partners cosine and
@@ -45,8 +67,16 @@ export const trigOrientBlocks: ReactElement[] = [
             <EditableParagraph id="para-trig-orient-prereq" blockId="trig-orient-prereq">
                 By the end you will be able to take any right-angled triangle, pick the
                 two sides you need, and write down its sine, cosine and tangent. You
-                already have everything that takes: writing a ratio of two lengths, and
-                dividing to get a decimal.
+                already have everything that takes: writing a{" "}
+                <InlineTooltip
+                    id="tooltip-trig-orient-ratio"
+                    tooltip="A comparison of two quantities by division, such as 2 m out of 4 m, which gives 0.5."
+                    color="#2563EB"
+                    bgColor="rgba(37, 99, 235, 0.12)"
+                >
+                    ratio
+                </InlineTooltip>{" "}
+                of two lengths, and dividing to get a decimal.
             </EditableParagraph>
         </Block>
     </StackLayout>,
